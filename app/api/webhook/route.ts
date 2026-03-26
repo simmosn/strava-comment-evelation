@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { parseElevation, convertToMeters } from '@/lib/elevation-parser';
-import { getActivity, updateActivityElevation, updateActivityComment } from '@/lib/strava';
+import { getActivity, updateActivity } from '@/lib/strava';
 import { getStoredAthleteIds } from '@/lib/auth';
 import { logInfo, logError, logDebug } from '@/lib/logger';
 
@@ -101,13 +101,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       elevationMeters 
     });
 
-    logInfo('Updating activity elevation on Strava', { activityId: payload.object_id, elevationMeters });
-    const elevationResult = await updateActivityElevation(payload.owner_id, payload.object_id, elevationMeters);
-    logInfo('Elevation updated successfully', { activityId: payload.object_id, result: elevationResult });
-
-    logInfo('Clearing activity description');
-    await updateActivityComment(payload.owner_id, payload.object_id, '');
-    logInfo('Description cleared successfully');
+    logInfo('Updating activity on Strava', { activityId: payload.object_id, elevationMeters });
+    const result = await updateActivity(payload.owner_id, payload.object_id, elevationMeters);
+    logInfo('Activity updated successfully', { activityId: payload.object_id, result });
 
     return NextResponse.json({
       message: 'Activity updated successfully',

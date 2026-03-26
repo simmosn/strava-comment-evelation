@@ -127,7 +127,7 @@ async function getValidAccessToken(athleteId: number): Promise<string> {
   return tokenData.accessToken;
 }
 
-export async function updateActivityElevation(
+export async function updateActivity(
   athleteId: number,
   activityId: number,
   elevationMeters: number
@@ -135,16 +135,16 @@ export async function updateActivityElevation(
   const accessToken = await getValidAccessToken(athleteId);
   const client = createApiClient(accessToken);
 
-  logInfo('PUT /activities/:id - elevation', { activityId, elevation: elevationMeters });
+  logInfo('PUT /activities/:id', { activityId, elevation: elevationMeters });
 
   try {
     const response = await client.put(`/activities/${activityId}`, {
       elevation: elevationMeters,
     });
-    logDebug('Elevation update response', response.data);
+    logDebug('Activity update response', response.data);
     return response.data;
   } catch (error) {
-    logError('Failed to update elevation', error);
+    logError('Failed to update activity', error);
     throw error;
   }
 }
