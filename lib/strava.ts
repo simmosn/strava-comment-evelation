@@ -1,5 +1,6 @@
 import axios, { AxiosInstance } from 'axios';
 import { storeToken, getToken } from './auth';
+import { logInfo, logDebug, logError } from './logger';
 
 const STRAVA_API_BASE = 'https://www.strava.com/api/v3';
 
@@ -10,10 +11,6 @@ interface StravaTokens {
   athlete: {
     id: number;
   };
-}
-
-interface UpdateActivityParams {
-  elevation: number;
 }
 
 export function getAuthorizationUrl(baseUrl: string): string {
@@ -37,6 +34,8 @@ export async function exchangeCodeForTokens(code: string, baseUrl: string): Prom
 
   const redirectUri = `${baseUrl}/api/auth/callback`;
 
+  logDebug('Exchanging authorization code for tokens', { redirectUri });
+
   const response = await axios.post<StravaTokens>(
     'https://www.strava.com/oauth/token',
     {
@@ -49,6 +48,8 @@ export async function exchangeCodeForTokens(code: string, baseUrl: string): Prom
   );
 
   const { access_token, refresh_token, expires_at, athlete } = response.data;
+
+  logInfo('Token exchange successful', { athleteId: athlete.id });
 
   storeToken(athlete.id, {
     accessToken: access_token,
@@ -74,6 +75,8 @@ async function refreshAccessToken(athleteId: number): Promise<string> {
     throw new Error('Strava credentials are not configured');
   }
 
+  logInfo('Refreshing access token', { athleteId });
+
   const response = await axios.post<StravaTokens>(
     'https://www.strava.com/oauth/token',
     {
@@ -92,6 +95,8 @@ async function refreshAccessToken(athleteId: number): Promise<string> {
     expiresAt: expires_at,
     athleteId,
   });
+
+  logInfo('Token refresh successful', { athleteId });
 
   return access_token;
 }
@@ -115,6 +120,7 @@ async function getValidAccessToken(athleteId: number): Promise<string> {
 
   const now = Math.floor(Date.now() / 1000);
   if (tokenData.expiresAt - now < 300) {
+    logDebug('Token expiring soon, refreshing', { athleteId, expiresAt: tokenData.expiresAt, now });
     return refreshAccessToken(athleteId);
   }
 
@@ -129,10 +135,18 @@ export async function updateActivityElevation(
   const accessToken = await getValidAccessToken(athleteId);
   const client = createApiClient(accessToken);
 
-  const response = await client.put(`/activities/${activityId}`, {
-    elevation: elevationMeters,
-  });
-  return response.data;
+  logInfo('PUT /activities/:id - elevation', { activityId, elevation: elevationMeters });
+
+  try {
+    const response = await client.put(`/activities/${activityId}`, {
+      elevation: elevationMeters,
+    });
+    logDebug('Elevation update response', response.data);
+    return response.data;
+  } catch (error) {
+    logError('Failed to update elevation', error);
+    throw error;
+  }
 }
 
 export async function updateActivityComment(
@@ -143,9 +157,17 @@ export async function updateActivityComment(
   const accessToken = await getValidAccessToken(athleteId);
   const client = createApiClient(accessToken);
 
-  await client.put(`/activities/${activityId}`, {
-    description: comment,
-  });
+  logInfo('PUT /activities/:id - description', { activityId, descriptionLength: comment.length });
+
+  try {
+    await client.put(`/activities/${activityId}`, {
+      description: comment,
+    });
+    logDebug('Description updated successfully');
+  } catch (error) {
+    logError('Failed to update description', error);
+    throw error;
+  }
 }
 
 export async function getActivity(
@@ -155,6 +177,14 @@ export async function getActivity(
   const accessToken = await getValidAccessToken(athleteId);
   const client = createApiClient(accessToken);
 
-  const response = await client.get(`/activities/${activityId}`);
-  return response.data;
+  logInfo('GET /activities/:id', { activityId });
+
+  try {
+    const response = await client.get(`/activities/${activityId}`);
+    logDebug('Activity fetched', { activityId, title: response.data.title });
+    return response.data;
+  } catch (error) {
+    logError('Failed to fetch activity', error);
+    throw error;
+  }
 }
