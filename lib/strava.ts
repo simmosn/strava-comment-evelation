@@ -173,9 +173,17 @@ export async function deleteActivity(
   try {
     await client.delete(`/activities/${activityId}`);
     logDebug('Activity deleted', { activityId });
-  } catch (error) {
-    logError('Failed to delete activity', error);
-    throw error;
+  } catch (error: unknown) {
+    if (axios.isAxiosError(error) && error.response?.status === 401) {
+      logInfo('Token expired, refreshing and retrying delete');
+      const newToken = await refreshAccessToken(athleteId);
+      const retryClient = createApiClient(newToken);
+      await retryClient.delete(`/activities/${activityId}`);
+      logDebug('Activity deleted after token refresh', { activityId });
+    } else {
+      logError('Failed to delete activity', error);
+      throw error;
+    }
   }
 }
 
