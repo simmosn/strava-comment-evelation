@@ -125,13 +125,14 @@ export async function updateActivityElevation(
   athleteId: number,
   activityId: number,
   elevationMeters: number
-): Promise<void> {
+): Promise<unknown> {
   const accessToken = await getValidAccessToken(athleteId);
   const client = createApiClient(accessToken);
 
-  await client.put(`/activities/${activityId}`, {
+  const response = await client.put(`/activities/${activityId}`, {
     elevation: elevationMeters,
   });
+  return response.data;
 }
 
 export async function updateActivityComment(

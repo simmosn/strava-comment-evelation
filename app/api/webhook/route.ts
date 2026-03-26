@@ -75,7 +75,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     console.log(`Updating activity ${payload.object_id}: ${parsedElevation.value}${parsedElevation.unit} = ${elevationMeters}m`);
 
-    await updateActivityElevation(payload.owner_id, payload.object_id, elevationMeters);
+    const elevationResult = await updateActivityElevation(payload.owner_id, payload.object_id, elevationMeters);
+    console.log('Elevation update result:', elevationResult);
     await updateActivityComment(payload.owner_id, payload.object_id, '');
 
     return NextResponse.json({
@@ -85,6 +86,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     });
   } catch (error) {
     console.error('Webhook error:', error);
+    if (error instanceof Error) {
+      return NextResponse.json({ message: 'Internal server error', error: error.message }, { status: 500 });
+    }
     return NextResponse.json({ message: 'Internal server error' }, { status: 500 });
   }
 }
