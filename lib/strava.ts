@@ -137,7 +137,7 @@ export async function updateActivity(
   const client = createApiClient(accessToken);
 
   const payload: Record<string, unknown> = {
-    elevation: elevationMeters,
+    total_elevation_gain: elevationMeters,
   };
 
   if (clearDescription) {
