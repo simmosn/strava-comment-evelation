@@ -130,49 +130,21 @@ async function getValidAccessToken(athleteId: number): Promise<string> {
 export async function updateActivity(
   athleteId: number,
   activityId: number,
-  elevationMeters: number,
-  clearDescription: boolean = false
+  elevationMeters: number
 ): Promise<unknown> {
   const accessToken = await getValidAccessToken(athleteId);
   const client = createApiClient(accessToken);
 
-  const payload: Record<string, unknown> = {
-    total_elevation_gain: elevationMeters,
-  };
-
-  if (clearDescription) {
-    payload.description = '';
-  }
-
-  logInfo('PUT /activities/:id', { activityId, ...payload });
+  logInfo('PUT /activities/:id', { activityId, elevation: elevationMeters });
 
   try {
-    const response = await client.put(`/activities/${activityId}`, payload);
+    const response = await client.put(`/activities/${activityId}`, {
+      total_elevation_gain: elevationMeters,
+    });
     logDebug('Activity update response', response.data);
     return response.data;
   } catch (error) {
     logError('Failed to update activity', error);
-    throw error;
-  }
-}
-
-export async function updateActivityComment(
-  athleteId: number,
-  activityId: number,
-  comment: string
-): Promise<void> {
-  const accessToken = await getValidAccessToken(athleteId);
-  const client = createApiClient(accessToken);
-
-  logInfo('PUT /activities/:id - description', { activityId, descriptionLength: comment.length });
-
-  try {
-    await client.put(`/activities/${activityId}`, {
-      description: comment,
-    });
-    logDebug('Description updated successfully');
-  } catch (error) {
-    logError('Failed to update description', error);
     throw error;
   }
 }

@@ -101,8 +101,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       elevationMeters 
     });
 
-    logInfo('Updating activity on Strava', { activityId: payload.object_id, elevationMeters, clearDescription: true });
-    const result = await updateActivity(payload.owner_id, payload.object_id, elevationMeters, true);
+    logInfo('Updating activity on Strava', { activityId: payload.object_id, elevationMeters });
+    const result = await updateActivity(payload.owner_id, payload.object_id, elevationMeters);
     logInfo('Activity updated successfully', { activityId: payload.object_id, result });
 
     return NextResponse.json({
