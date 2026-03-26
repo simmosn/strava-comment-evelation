@@ -127,24 +127,53 @@ async function getValidAccessToken(athleteId: number): Promise<string> {
   return tokenData.accessToken;
 }
 
-export async function updateActivity(
+export async function createActivityWithElevation(
   athleteId: number,
-  activityId: number,
+  originalActivity: Record<string, unknown>,
   elevationMeters: number
-): Promise<unknown> {
+): Promise<Record<string, unknown>> {
   const accessToken = await getValidAccessToken(athleteId);
   const client = createApiClient(accessToken);
 
-  logInfo('PUT /activities/:id', { activityId, elevation: elevationMeters });
+  const payload = {
+    name: originalActivity.name as string,
+    type: originalActivity.type as string,
+    sport_type: originalActivity.sport_type as string,
+    start_date_local: originalActivity.start_date_local as string,
+    elapsed_time: originalActivity.elapsed_time as number,
+    description: originalActivity.description as string || '',
+    distance: originalActivity.distance as number,
+    trainer: originalActivity.trainer ? 1 : 0,
+    commute: originalActivity.commute ? 1 : 0,
+    elev_gain: elevationMeters,
+  };
+
+  logInfo('POST /activities (with elevation)', { name: payload.name, elevation: elevationMeters });
 
   try {
-    const response = await client.put(`/activities/${activityId}`, {
-      total_elevation_gain: elevationMeters,
-    });
-    logDebug('Activity update response', response.data);
+    const response = await client.post('/activities', payload);
+    logDebug('Activity created', { newActivityId: response.data.id });
     return response.data;
   } catch (error) {
-    logError('Failed to update activity', error);
+    logError('Failed to create activity', error);
+    throw error;
+  }
+}
+
+export async function deleteActivity(
+  athleteId: number,
+  activityId: number
+): Promise<void> {
+  const accessToken = await getValidAccessToken(athleteId);
+  const client = createApiClient(accessToken);
+
+  logInfo('DELETE /activities/:id', { activityId });
+
+  try {
+    await client.delete(`/activities/${activityId}`);
+    logDebug('Activity deleted', { activityId });
+  } catch (error) {
+    logError('Failed to delete activity', error);
     throw error;
   }
 }
