@@ -136,7 +136,7 @@ export async function createActivityWithElevation(
   const client = createApiClient(accessToken);
 
   const payload = {
-    name: `${originalActivity.name} (elev: ${elevationMeters}m)`,
+    name: `${originalActivity.name} UPDATED`,
     type: originalActivity.type as string,
     sport_type: originalActivity.sport_type as string,
     start_date_local: originalActivity.start_date_local as string,

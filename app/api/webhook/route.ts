@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { parseElevation, convertToMeters } from '@/lib/elevation-parser';
-import { getActivity, createActivityWithElevation, deleteActivity } from '@/lib/strava';
+import { getActivity, createActivityWithElevation } from '@/lib/strava';
 import { getStoredAthleteIds } from '@/lib/auth';
 import { logInfo, logError, logDebug } from '@/lib/logger';
 
@@ -105,12 +105,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const newActivity = await createActivityWithElevation(payload.owner_id, activity, elevationMeters);
     logInfo('New activity created', { newActivityId: newActivity.id });
 
-    logInfo('Deleting original activity', { originalActivityId: payload.object_id });
-    await deleteActivity(payload.owner_id, payload.object_id);
-    logInfo('Original activity deleted');
-
     return NextResponse.json({
-      message: 'Activity replaced successfully',
+      message: 'New activity created with elevation',
       original_activity_id: payload.object_id,
       new_activity_id: newActivity.id,
       elevation: elevationMeters,
