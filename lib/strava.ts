@@ -62,7 +62,7 @@ export async function exchangeCodeForTokens(code: string, baseUrl: string): Prom
 }
 
 async function refreshAccessToken(athleteId: number): Promise<string> {
-  const tokenData = getToken(athleteId);
+  const tokenData = await getToken(athleteId);
   
   if (!tokenData) {
     throw new Error(`No token found for athlete ${athleteId}`);
@@ -112,7 +112,7 @@ function createApiClient(accessToken: string): AxiosInstance {
 }
 
 async function getValidAccessToken(athleteId: number): Promise<string> {
-  const tokenData = getToken(athleteId);
+  const tokenData = await getToken(athleteId);
   
   if (!tokenData) {
     throw new Error(`No token found for athlete ${athleteId}`);

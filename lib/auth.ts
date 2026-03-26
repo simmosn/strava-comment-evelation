@@ -1,3 +1,5 @@
+import { Redis } from '@upstash/redis';
+
 interface TokenData {
   accessToken: string;
   refreshToken: string;
@@ -5,20 +7,30 @@ interface TokenData {
   athleteId: number;
 }
 
-const tokenStore: Map<number, TokenData> = new Map();
+const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL!,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+});
 
-export function storeToken(athleteId: number, tokenData: TokenData): void {
-  tokenStore.set(athleteId, tokenData);
+function getTokenKey(athleteId: number): string {
+  return `strava_token:${athleteId}`;
 }
 
-export function getToken(athleteId: number): TokenData | undefined {
-  return tokenStore.get(athleteId);
+export async function storeToken(athleteId: number, tokenData: TokenData): Promise<void> {
+  await redis.set(getTokenKey(athleteId), JSON.stringify(tokenData));
 }
 
-export function removeToken(athleteId: number): void {
-  tokenStore.delete(athleteId);
+export async function getToken(athleteId: number): Promise<TokenData | undefined> {
+  const data = await redis.get<string>(getTokenKey(athleteId));
+  if (!data) return undefined;
+  return typeof data === 'string' ? JSON.parse(data) : data;
 }
 
-export function getStoredAthleteIds(): number[] {
-  return Array.from(tokenStore.keys());
+export async function removeToken(athleteId: number): Promise<void> {
+  await redis.del(getTokenKey(athleteId));
+}
+
+export async function getStoredAthleteIds(): Promise<number[]> {
+  const keys = await redis.keys('strava_token:*');
+  return keys.map(key => parseInt(key.replace('strava_token:', ''), 10));
 }

@@ -61,7 +61,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       return NextResponse.json({ message: 'Ignoring delete event' }, { status: 200 });
     }
 
-    const athleteIds = getStoredAthleteIds();
+    const athleteIds = await getStoredAthleteIds();
     logDebug('Stored athlete IDs', { athleteIds });
 
     if (athleteIds.length === 0) {
