@@ -130,17 +130,24 @@ async function getValidAccessToken(athleteId: number): Promise<string> {
 export async function updateActivity(
   athleteId: number,
   activityId: number,
-  elevationMeters: number
+  elevationMeters: number,
+  clearDescription: boolean = false
 ): Promise<unknown> {
   const accessToken = await getValidAccessToken(athleteId);
   const client = createApiClient(accessToken);
 
-  logInfo('PUT /activities/:id', { activityId, elevation: elevationMeters });
+  const payload: Record<string, unknown> = {
+    elevation: elevationMeters,
+  };
+
+  if (clearDescription) {
+    payload.description = '';
+  }
+
+  logInfo('PUT /activities/:id', { activityId, ...payload });
 
   try {
-    const response = await client.put(`/activities/${activityId}`, {
-      elevation: elevationMeters,
-    });
+    const response = await client.put(`/activities/${activityId}`, payload);
     logDebug('Activity update response', response.data);
     return response.data;
   } catch (error) {
