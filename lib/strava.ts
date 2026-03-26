@@ -136,7 +136,7 @@ export async function createActivityWithElevation(
   const client = createApiClient(accessToken);
 
   const payload = {
-    name: originalActivity.name as string,
+    name: `${originalActivity.name} (elev: ${elevationMeters}m)`,
     type: originalActivity.type as string,
     sport_type: originalActivity.sport_type as string,
     start_date_local: originalActivity.start_date_local as string,
@@ -146,6 +146,7 @@ export async function createActivityWithElevation(
     trainer: originalActivity.trainer ? 1 : 0,
     commute: originalActivity.commute ? 1 : 0,
     elev_gain: elevationMeters,
+    external_id: `elev-fix-${Date.now()}-${originalActivity.id}`,
   };
 
   logInfo('POST /activities (with elevation)', { name: payload.name, elevation: elevationMeters });
